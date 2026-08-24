@@ -72,7 +72,7 @@ func (s *OpsService) Transition(ctx context.Context, id string, expected int, ta
 	defer cancel()
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("transition failed: %v", err)
+			err = fmt.Errorf("transition failed: %w", err)
 		}
 	}()
 	record, err = s.store.Get(ctx, id)
@@ -80,7 +80,7 @@ func (s *OpsService) Transition(ctx context.Context, id string, expected int, ta
 		return OpsRecord{}, err
 	}
 	if expected > 0 && expected != record.Revision {
-		return OpsRecord{}, fmt.Errorf("revision mismatch")
+		return OpsRecord{}, fmt.Errorf("%w: have %d want %d", ErrOpsConflict, record.Revision, expected)
 	}
 	if err := s.state.Move(record.Status, target, "operator update"); err != nil {
 		return OpsRecord{}, err
