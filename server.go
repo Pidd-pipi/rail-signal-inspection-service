@@ -2,10 +2,8 @@ package main
 
 import "net/http"
 
-var signalMux = http.NewServeMux()
-
 func newServer(store *SignalStore) *http.ServeMux {
-	mux := signalMux
+	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", healthHandler)
 	mux.Handle("/api/signals", signalHandler{store: store})
 	mux.Handle("/api/signals/", signalHandler{store: store})

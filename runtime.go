@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 )
@@ -20,7 +21,7 @@ func serveAddress(address string, handler http.Handler) error {
 }
 
 func serveHTTP(server *http.Server) error {
-	errCh := make(chan error)
+	errCh := make(chan error, 1)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -63,8 +64,7 @@ func requestIDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestID := r.Header.Get("X-Request-ID")
 		if requestID == "" {
-			requestID = fmt.Sprintf("req-%d", requestSequence)
-			requestSequence++
+			requestID = fmt.Sprintf("req-%d", atomic.AddUint64(&requestSequence, 1))
 		}
 		w.Header().Set("X-Request-ID", requestID)
 		next.ServeHTTP(w, r)
