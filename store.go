@@ -15,6 +15,8 @@ func newSignalStore() *SignalStore {
 }
 
 func (s *SignalStore) List() []Signal {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	result := make([]Signal, 0, len(s.signals))
 	for _, signal := range s.signals {
 		result = append(result, signal)
@@ -23,16 +25,14 @@ func (s *SignalStore) List() []Signal {
 }
 
 func (s *SignalStore) RecordInspection(id, inspection string) (Signal, bool, bool) {
-	if signal, exists := s.signals[id]; exists {
-		if !inspectionTransitions[signal.Inspection][inspection] {
-			return signal, true, false
-		}
-	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	signal, exists := s.signals[id]
 	if !exists {
 		return Signal{}, false, false
+	}
+	if !inspectionTransitions[signal.Inspection][inspection] {
+		return signal, true, false
 	}
 	signal.Inspection = inspection
 	s.signals[id] = signal
