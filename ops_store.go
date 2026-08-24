@@ -20,6 +20,9 @@ func newOpsStore(seed []OpsRecord) *OpsStore {
 	return s
 }
 func (s *OpsStore) Get(ctx context.Context, id string) (OpsRecord, error) {
+	if err := ctx.Err(); err != nil {
+		return OpsRecord{}, err
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	item, ok := s.items[id]
@@ -29,6 +32,9 @@ func (s *OpsStore) Get(ctx context.Context, id string) (OpsRecord, error) {
 	return item.Clone(), nil
 }
 func (s *OpsStore) List(ctx context.Context) ([]OpsRecord, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	out := make([]OpsRecord, 0, len(s.items))
@@ -39,8 +45,14 @@ func (s *OpsStore) List(ctx context.Context) ([]OpsRecord, error) {
 	return out, nil
 }
 func (s *OpsStore) Put(ctx context.Context, item OpsRecord) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if _, ok := s.items[item.ID]; ok {
 		return ErrOpsConflict
 	}
@@ -48,8 +60,14 @@ func (s *OpsStore) Put(ctx context.Context, item OpsRecord) error {
 	return nil
 }
 func (s *OpsStore) Update(ctx context.Context, item OpsRecord, expected int) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	current, ok := s.items[item.ID]
 	if !ok {
 		return ErrOpsNotFound
@@ -63,8 +81,14 @@ func (s *OpsStore) Update(ctx context.Context, item OpsRecord, expected int) err
 	return nil
 }
 func (s *OpsStore) Delete(ctx context.Context, id string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if _, ok := s.items[id]; !ok {
 		return ErrOpsNotFound
 	}

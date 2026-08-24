@@ -16,10 +16,16 @@ func (c OpsClock) Now() time.Time {
 }
 func (c OpsClock) Stamp() string { return c.Now().Format(time.RFC3339Nano) }
 func opsContext(parent context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
-	parent = context.Background()
+	if parent == nil {
+		parent = context.Background()
+	}
 	if timeout <= 0 {
 		timeout = 5 * time.Second
 	}
+	// Derive from the real parent so cancellation and any existing deadline
+	// propagate downward. WithTimeout picks the earlier of the parent's
+	// deadline and ours, so a request that already carries a deadline is
+	// still honoured.
 	return context.WithTimeout(parent, timeout)
 }
 func opsDeadline(ctx context.Context) bool {

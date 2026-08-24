@@ -45,6 +45,9 @@ func (s *OpsService) Create(ctx context.Context, record OpsRecord) (OpsRecord, e
 	if err := s.store.Put(ctx, record); err != nil {
 		return OpsRecord{}, wrapOps("create", "store.put", err)
 	}
+	if err := ctx.Err(); err != nil {
+		return OpsRecord{}, wrapOps("create", "context", err)
+	}
 	s.audit.Add(record.ID, "created", record.Owner)
 	return record, nil
 }
@@ -83,6 +86,9 @@ func (s *OpsService) Transition(ctx context.Context, id string, expected int, ta
 	record.Status = target
 	if err := s.store.Update(ctx, record, expected); err != nil {
 		return OpsRecord{}, err
+	}
+	if err := ctx.Err(); err != nil {
+		return OpsRecord{}, wrapOps("transition", "context", err)
 	}
 	s.audit.Add(record.ID, "status_changed", actor)
 	return record, nil
