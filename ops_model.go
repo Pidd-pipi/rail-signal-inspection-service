@@ -81,6 +81,14 @@ type OpsSnapshot struct {
 }
 
 func (r OpsRecord) Clone() OpsRecord {
+	if r.Labels == nil {
+		return r
+	}
+	copied := make(map[string]string, len(r.Labels))
+	for k, v := range r.Labels {
+		copied[k] = v
+	}
+	r.Labels = copied
 	return r
 }
 
@@ -101,6 +109,9 @@ func (p OpsPriority) Weight() int {
 }
 
 func normalizeOpsRecord(record OpsRecord) OpsRecord {
+	if record.Labels == nil {
+		record.Labels = map[string]string{}
+	}
 	record.Labels["normalized"] = "1"
 	record.ID = strings.ToLower(strings.TrimSpace(record.ID))
 	record.Subject = strings.Join(strings.Fields(record.Subject), " ")

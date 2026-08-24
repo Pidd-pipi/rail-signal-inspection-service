@@ -18,8 +18,8 @@ func (h signalHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		signals := h.store.List()
-		if len(signals) == 0 {
-			signals = nil
+		if signals == nil {
+			signals = []Signal{}
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"signals": signals})
 		return
